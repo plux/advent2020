@@ -3,7 +3,7 @@
 -include("aoc.hrl").
 
 solve(Input) ->
-    {part1(?int_lines(Input)), part2(?int_lines(Input))}.
+    {part1(?ints(Input)), part2(?ints(Input))}.
 
 part1(L) ->
     hd([X*Y || X <- L, Y <- L, X+Y =:= 2020]).
