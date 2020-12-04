@@ -18,14 +18,14 @@
 
 %% Integers ------------------------------------------------------------
 -spec int(str()) -> integer().
-int(L) ->
-    list_to_integer(string:trim(L)).
+int(N) when is_integer(N) -> N;
+int(L)                    -> list_to_integer(string:trim(L)).
 
 -spec ints(str()) -> [integer()].
 ints(L) ->
     [int(X) || X <- words(L), is_int(X)].
 
--spec is_int(str()) -> boolean().
+-spec is_int(_) -> boolean().
 is_int(X) ->
     is_integer(catch aoc:int(X)).
 
@@ -37,7 +37,7 @@ float(L) ->
 floats(L) ->
     [aoc:float(X) || X <- words(L), aoc:is_float(X)].
 
--spec is_float(str()) -> boolean().
+-spec is_float(_) -> boolean().
 is_float(X) ->
     erlang:is_float(catch aoc:float(X)).
 
