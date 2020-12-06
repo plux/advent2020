@@ -10,6 +10,7 @@
 
 -export([words/1]).
 -export([lines/1]).
+-export([split/2]).
 
 -export([solve/1]).
 -export([solve/2]).
@@ -49,6 +50,13 @@ words(L) ->
 -spec lines(str()) -> [str()].
 lines(L) ->
     string:lexemes(L, "\n").
+
+-spec split(str(), str()) -> [str()].
+split(Input, Sep) ->
+    case string:split(Input, Sep) of
+        [Input]       -> [Input];
+        [Match, Rest] -> [Match|split(Rest, Sep)]
+    end.
 
 %% Solve ---------------------------------------------------------------
 solve(Mod) when is_atom(Mod) ->

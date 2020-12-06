@@ -12,22 +12,13 @@ part2(Passports) ->
     length([P || P <- Passports, is_valid(P)]).
 
 passports(Input) ->
-    passports(Input ++ "\n", #{}, []).
+    [passport(["cid:ignore"|?words(Chunk)]) || Chunk <- ?split(Input, "\n\n")].
 
-passports([], Curr, Passports) ->
-    [Curr|Passports];
-passports("\n" ++ Rest, Curr, Passports) ->
-    passports(Rest, #{}, [Curr|Passports]);
-passports(Input, Curr, Passports) ->
-    [Line, Rest] = string:split(Input, "\n"),
-    Passport = maps:merge(parse("cid:ignore " ++ Line), Curr),
-    passports(Rest, Passport, Passports).
-
-parse(Line) ->
-    maps:from_list([list_to_tuple(string:lexemes(W, ":")) || W <- ?words(Line)]).
+passport(Words) ->
+    maps:from_list([list_to_tuple(?split(W, ":")) || W <- Words]).
 
 is_valid(Passport) ->
-    8 =:= length([ok || {K, V} <- maps:to_list(Passport), is_valid(K, V)]).
+    8 =:= maps:size(maps:filter(fun is_valid/2, Passport)).
 
 %% byr (Birth Year) - four digits; at least 1920 and at most 2002.
 is_valid("byr", Value) -> in_range(Value, 1920, 2002);

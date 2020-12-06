@@ -6,3 +6,4 @@
 -define(words_lines(X), [?words(Line) || Line <- ?lines(X)]).
 -define(ints_lines(X), [?ints(Line) || Line <- ?lines(X)]).
 -define(int_lines(X), [?int(Line) || Line <- ?lines(X)]).
+-define(split(X, Sep), aoc:split(X, Sep)).
