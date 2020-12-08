@@ -13,7 +13,7 @@ solve(Input) ->
     {part1(?lines(Input)), part2(?lines(Input))}.
 
 part1(Lines) ->
-    {error, #cpu{acc = Acc}} = run(cpu(parse_ops(Lines))),
+    {cycle, #cpu{acc = Acc}} = run(cpu(parse_ops(Lines))),
     Acc.
 
 part2(Lines) ->
@@ -23,7 +23,7 @@ part2(Lines) ->
 switch_ops(N, CPU0) ->
     case run(switch_op(N, CPU0)) of
         {ok, CPU}  -> {ok, CPU};
-        {error, _} -> switch_ops(N+1, CPU0)
+        {cycle, _} -> switch_ops(N+1, CPU0)
     end.
 
 switch_op(N, #cpu{ops = Ops} = CPU) ->
@@ -40,7 +40,7 @@ run(#cpu{pc = PC, num_ops = NumOps} = CPU) when PC >= NumOps ->
     {ok, CPU};
 run(#cpu{pc = PC, visited = Visited, ops = Ops} = CPU) ->
     case lists:member(PC, Visited) of
-        true  -> {error, CPU};
+        true  -> {cycle, CPU};
         false -> run(exec(array:get(PC, Ops), CPU#cpu{visited = [PC|Visited]}))
     end.
 
