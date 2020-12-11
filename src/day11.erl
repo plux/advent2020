@@ -6,33 +6,20 @@ solve(Input) ->
     {part1(?lines(Input)), part2(?lines(Input))}.
 
 part1(Lines) ->
-    fixpoint(grid(Lines), rules_p1()).
+    fixpoint(grid(Lines), rules(fun count_adjacent_occupied/2, 4)).
 
 part2(Lines) ->
-    fixpoint(grid(Lines), rules_p2()).
+    fixpoint(grid(Lines), rules(fun count_seen_occupied/2, 5)).
 
-rules_p1() ->
+rules(Counter, Limit) ->
     fun(Grid) ->
             fun(_Pos, $.) ->
                     $.;
                (Pos, V) ->
-                    case {V, count_occupied(Pos, Grid)} of
-                        {$L, 0}                     -> $#;
-                        {$#, Count} when Count >= 4 -> $L;
-                        _                           -> V
-                    end
-            end
-    end.
-
-rules_p2() ->
-    fun(Grid) ->
-            fun(_Pos, $.) ->
-                    $.;
-               (Pos, V) ->
-                    case {V, count_occupied_p2(Pos, Grid)} of
-                        {$L, 0}                     -> $#;
-                        {$#, Count} when Count >= 5 -> $L;
-                        _                           -> V
+                    case {V, Counter(Pos, Grid)} of
+                        {$L, 0}                         -> $#;
+                        {$#, Count} when Count >= Limit -> $L;
+                        _                               -> V
                     end
             end
     end.
@@ -43,16 +30,14 @@ fixpoint(Grid, Rules) ->
         NewGrid -> fixpoint(NewGrid, Rules)
     end.
 
-count_occupied(Pos, Map) ->
-    length([1 || $# <- adjacent(Pos, Map)]).
+count_adjacent_occupied(Pos, Grid) ->
+    length([Dir || Dir <- directions(), is_occupied(Dir, Pos, Grid)]).
 
-count_occupied_p2(Pos, Grid) ->
+count_seen_occupied(Pos, Grid) ->
     length([Dir || Dir <- directions(), sees_occupied(Dir, Pos, Grid)]).
 
-
-adjacent(Pos, Map) ->
-    [Value || Coord <- directions(),
-              {ok, Value} <- [maps:find(add(Pos, Coord), Map)]].
+is_occupied(Dir, Pos, Grid) ->
+    {ok, $#} =:= maps:find(add(Dir, Pos), Grid).
 
 sees_occupied(Dir, Pos, Grid) ->
     case maps:find(add(Dir, Pos), Grid) of
@@ -63,22 +48,17 @@ sees_occupied(Dir, Pos, Grid) ->
     end.
 
 directions() ->
-    [ {-1,-1}
-    , {-1, 0}
-    , {-1, 1}
-    , {0, -1}
-    , {0, 1}
-    , {1, -1}
-    , {1, 0}
-    , {1, 1}
+    [ {-1, -1}, {-1, 0}, {-1, 1}
+    , { 0, -1},          { 0, 1}
+    , { 1, -1}, { 1, 0}, { 1, 1}
     ].
 
 add({X1, Y1}, {X2, Y2}) ->
     {X1+X2, Y1+Y2}.
 
 grid(L) ->
-    maps:from_list([{{X,Y},C} || {Y, Line} <- enumerate(L),
-                                 {X, C} <- enumerate(Line)]).
+    maps:from_list([{{X, Y}, C} || {Y, Line} <- enumerate(L),
+                                   {X, C} <- enumerate(Line)]).
 
 enumerate(L) ->
     lists:zip(lists:seq(0, length(L)-1), L).
