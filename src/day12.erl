@@ -2,6 +2,12 @@
 -compile([export_all]).
 -include("aoc.hrl").
 
+%%      N              {0,-1}
+%%   NW | NE      {-1,-1}|{1,-1}
+%% W ---+--- E {-1,0}----+----{1,0}
+%%   SW | SE       {-1,1}|{1,1}
+%%      S              {0,1}
+
 -define(west, {-1, 0}).
 -define(east, {1, 0}).
 -define(north, {0, -1}).
@@ -11,46 +17,37 @@ solve(Input) ->
     {part1(?lines(Input)), part2(?lines(Input))}.
 
 part1(Lines) ->
-    Actions = parse(Lines),
-    {X,Y} = apply_actions(Actions, {{0, 0}, ?east}),
-    abs(X)+abs(Y).
+    navigate(parse(Lines), fun rules_p1/2, {{0, 0}, ?east}).
 
-apply_actions([], {Pos, _Dir}) -> Pos;
-apply_actions([Action|Rest], Ship) ->
-    apply_actions(Rest, apply_action(Action, Ship)).
+part2(Lines) ->
+    navigate(parse(Lines), fun rules_p2/2, {{0, 0}, {10, -1}}).
 
-apply_action({$F, N}, {Pos, Dir}) -> {move(Pos, Dir, N), Dir};
-apply_action({$N, N}, {Pos, Dir}) -> {move(Pos, ?north, N), Dir};
-apply_action({$S, N}, {Pos, Dir}) -> {move(Pos, ?south, N), Dir};
-apply_action({$E, N}, {Pos, Dir}) -> {move(Pos, ?east, N), Dir};
-apply_action({$W, N}, {Pos, Dir}) -> {move(Pos, ?west, N), Dir};
-apply_action({$L, N}, {Pos, Dir}) -> {Pos, rot_l(Dir, N)};
-apply_action({$R, N}, {Pos, Dir}) -> {Pos, rot_r(Dir, N)}.
+navigate([], _Fun, {{X, Y}, _Dir}) -> abs(X) + abs(Y);
+navigate([Action|Rest], Fun, Ship) -> navigate(Rest, Fun, Fun(Action, Ship)).
 
-%% TODO: This could be made smarter
-rot_r(Dir, 0)    -> Dir;
-rot_r(?east, N)  -> rot_r(?south, N-90);
-rot_r(?south, N) -> rot_r(?west, N-90);
-rot_r(?west, N)  -> rot_r(?north, N-90);
-rot_r(?north, N) -> rot_r(?east, N-90).
+rules_p1({$F, N}, {Pos, Dir}) -> {move(Pos, Dir, N), Dir};
+rules_p1({$L, N}, {Pos, Dir}) -> {Pos, rot(Dir, 360-N)};
+rules_p1({$R, N}, {Pos, Dir}) -> {Pos, rot(Dir, N)};
+rules_p1({X,  N}, {Pos, Dir}) -> {move(Pos, dir(X), N), Dir}.
 
-rot_l(Dir, 0)    -> Dir;
-rot_l(?east, N)  -> rot_l(?north, N-90);
-rot_l(?south, N) -> rot_l(?east, N-90);
-rot_l(?west, N)  -> rot_l(?south, N-90);
-rot_l(?north, N) -> rot_l(?west, N-90).
+rules_p2({$F, N}, {Ship, WP}) -> {move(Ship, WP, N), WP};
+rules_p2({$L, N}, {Ship, WP}) -> {Ship, rot(WP, 360-N)};
+rules_p2({$R, N}, {Ship, WP}) -> {Ship, rot(WP, N)};
+rules_p2({X,  N}, {Ship, WP}) -> {Ship, move(WP, dir(X), N)}.
+
+dir($N) -> ?north;
+dir($S) -> ?south;
+dir($W) -> ?west;
+dir($E) -> ?east.
+
+rot({X, Y}, 0) -> {X, Y};
+rot({X, Y}, N) -> rot({-Y, X}, N-90).
 
 parse(Lines) ->
     [{C, ?int(Rest)} || [C|Rest] <- Lines].
 
-part2(_Lines) ->
-    unsolved.
-
-move(Pos, {X,Y}, N) ->
-    add(Pos, {X*N, Y*N}).
-
-add({X1, Y1}, {X2, Y2}) ->
-    {X1+X2, Y1+Y2}.
+move({X1, Y1}, {X2, Y2}, N) ->
+    {X1 + N*X2, Y1 + N*Y2}.
 
 -include_lib("eunit/include/eunit.hrl").
 solve_test_() ->
@@ -61,6 +58,7 @@ solve_test_() ->
          "F11"
         ],
     [ ?_assertEqual(25, part1(L))
+    , ?_assertEqual({10,-1}, rot({10,-1}, 360))
     , ?_assertEqual(286, part2(L))
-    , ?_assertEqual({1838, unsolved}, ?solve())
+    , ?_assertEqual({1838, 89936}, ?solve())
     ].
