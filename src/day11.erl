@@ -6,10 +6,10 @@ solve(Input) ->
     {part1(?lines(Input)), part2(?lines(Input))}.
 
 part1(Lines) ->
-    fixpoint(grid(Lines), rules(fun count_adjacent_occupied/2, 4)).
+    fixpoint(?grid(Lines), rules(fun count_adjacent_occupied/2, 4)).
 
 part2(Lines) ->
-    fixpoint(grid(Lines), rules(fun count_seen_occupied/2, 5)).
+    fixpoint(?grid(Lines), rules(fun count_seen_occupied/2, 5)).
 
 rules(Counter, Limit) ->
     fun(Grid) ->
@@ -48,20 +48,13 @@ sees_occupied(Dir, Pos, Grid) ->
     end.
 
 directions() ->
-    [ {-1, -1}, {0, -1}, {1, -1}
-    , {-1,  0},          {1,  0}
-    , {-1,  1}, {0,  1}, {1,  1}
+    [ ?nw, ?north, ?ne
+    , ?west,       ?east
+    , ?sw, ?south, ?se
     ].
 
 add({X1, Y1}, {X2, Y2}) ->
     {X1+X2, Y1+Y2}.
-
-grid(L) ->
-    maps:from_list([{{X, Y}, C} || {Y, Line} <- enumerate(L),
-                                   {X, C} <- enumerate(Line)]).
-
-enumerate(L) ->
-    lists:zip(lists:seq(0, length(L)-1), L).
 
 -include_lib("eunit/include/eunit.hrl").
 solve_test_() ->
@@ -76,16 +69,6 @@ solve_test_() ->
          "#.######.#",
          "#.#####.##"
         ],
-    L2 = [".......#.",
-          "...#.....",
-          ".#.......",
-          ".........",
-          "..#L....#",
-          "....#....",
-          ".........",
-          "#........",
-          "...#....."
-         ],
     [ ?_assertEqual(37, part1(L))
     , ?_assertEqual(26, part2(L))
     , ?_assertEqual({2296, 2089}, ?solve())

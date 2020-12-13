@@ -15,6 +15,9 @@
 -export([solve/1]).
 -export([solve/2]).
 
+-export([grid/1]).
+-export([enumerate/1]).
+
 -type str() :: list().
 
 %% Integers ------------------------------------------------------------
@@ -57,6 +60,16 @@ split(Input, Sep) ->
         [Input]       -> [Input];
         [Match, Rest] -> [Match|split(Rest, Sep)]
     end.
+
+%% Grid
+-spec grid([str()]) -> map().
+grid(L) ->
+    maps:from_list([{{X, Y}, C} || {Y, Line} <- enumerate(L),
+                                   {X, C} <- enumerate(Line)]).
+
+-spec enumerate([X]) -> [{integer(), X}].
+enumerate(L) ->
+    lists:zip(lists:seq(0, length(L)-1), L).
 
 %% Solve ---------------------------------------------------------------
 solve(Mod) when is_atom(Mod) ->
