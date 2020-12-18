@@ -9,19 +9,28 @@ part1(Lines) ->
     Grid = lists:foldl(fun(_, Acc) ->
                                step(Acc)
                        end, grid(Lines), lists:seq(1,6)),
-    length([1 || $# <- maps:values(Grid)]).
+    maps:size(Grid).
 
 grid(L) ->
-    maps:from_list([{{X, Y, 0}, $#} || {X, Line} <- aoc:enumerate(L),
+    maps:from_list([{[X, Y, 0], $#} || {X, Line} <- aoc:enumerate(L),
                                        {Y, $#} <- aoc:enumerate(Line)]).
 
+
+cartesian([H|T]) -> [[A|B] || A <- H, B <- cartesian(T)];
+cartesian([]) -> [[]].
+
+part2(Lines) ->
+    Grid = lists:foldl(fun(_, Acc) ->
+                               step(Acc)
+                       end, grid_p2(Lines), lists:seq(1,6)),
+    maps:size(Grid).
+
+grid_p2(L) ->
+    maps:from_list([{[X, Y, 0, 0], $#} || {X, Line} <- aoc:enumerate(L),
+                                          {Y, $#} <- aoc:enumerate(Line)]).
 step(Grid) ->
-    [Xs, Ys, Zs] = unzipn(maps:keys(Grid)),
-    maps:from_list([{{X,Y,Z}, $#} ||
-                       X <- lists:seq(lists:min(Xs)-1, lists:max(Xs)+1),
-                       Y <- lists:seq(lists:min(Ys)-1, lists:max(Ys)+1),
-                       Z <- lists:seq(lists:min(Zs)-1, lists:max(Zs)+1),
-                       activate({X,Y,Z}, Grid)]).
+    Dims = [lists:seq(lists:min(L)-1, lists:max(L)+1) || L <- unzipn(maps:keys(Grid))],
+    maps:from_list([{Pos, $#} || Pos <- cartesian(Dims), activate(Pos, Grid)]).
 
 activate(Pos, Grid) ->
     case {maps:is_key(Pos, Grid), neighbors(Pos, Grid)} of
@@ -30,46 +39,9 @@ activate(Pos, Grid) ->
         _                                  -> false
     end.
 
-neighbors({X,Y,Z}, Grid) ->
-    length([1 || PX <- lists:seq(X-1,X+1),
-                 PY <- lists:seq(Y-1,Y+1),
-                 PZ <- lists:seq(Z-1,Z+1),
-                 maps:is_key({PX,PY,PZ}, Grid),
-                 {PX,PY,PZ} =/= {X, Y, Z}]).
-
-part2(Lines) ->
-    Grid = lists:foldl(fun(_, Acc) ->
-                               step_p2(Acc)
-                       end, grid_p2(Lines), lists:seq(1,6)),
-    length([1 || $# <- maps:values(Grid)]).
-
-grid_p2(L) ->
-    maps:from_list([{{X, Y, 0, 0}, $#} || {X, Line} <- aoc:enumerate(L),
-                                          {Y, $#} <- aoc:enumerate(Line)]).
-step_p2(Grid) ->
-    [Xs, Ys, Zs, Ws] = unzipn(maps:keys(Grid)),
-    maps:from_list([{{X,Y,Z,W}, $#} ||
-                       X <- lists:seq(lists:min(Xs)-1, lists:max(Xs)+1),
-                       Y <- lists:seq(lists:min(Ys)-1, lists:max(Ys)+1),
-                       Z <- lists:seq(lists:min(Zs)-1, lists:max(Zs)+1),
-                       W <- lists:seq(lists:min(Ws)-1, lists:max(Ws)+1),
-                       activate_p2({X,Y,Z,W}, Grid)]).
-
-activate_p2(Pos, Grid) ->
-    case {maps:is_key(Pos, Grid), neighbors_p2(Pos, Grid)} of
-        {true, Ns} when Ns =:= 2; Ns =:= 3 -> true;
-        {false, 3}                         -> true;
-        _                                  -> false
-    end.
-
-
-neighbors_p2({X,Y,Z,W}, Grid) ->
-    length([1 || PX <- [X-1, X, X+1],
-                 PY <- [Y-1, Y, Y+1],
-                 PZ <- [Z-1, Z, Z+1],
-                 PW <- [W-1, W, W+1],
-                 maps:is_key({PX,PY,PZ,PW}, Grid),
-                 {PX,PY,PZ,PW} =/= {X, Y, Z, W}]).
+neighbors(Pos, Grid) ->
+    Dims = [[N-1, N, N+1] || N <- Pos],
+    length([1 || Neigh <- cartesian(Dims), maps:is_key(Neigh, Grid), Neigh =/= Pos]).
 
 print_grid(N, Grid) ->
     Dims = lists:seq(-N, N),
@@ -87,7 +59,7 @@ print_grid(N, Grid) ->
       end, Dims).
 
 unzipn(L) ->
-    [[element(N, Tuple) || Tuple <- L] || N <- lists:seq(1, tuple_size(hd(L)))].
+    [[lists:nth(N, Tuple) || Tuple <- L] || N <- lists:seq(1, length(hd(L)))].
 
 -include_lib("eunit/include/eunit.hrl").
 solve_test_() ->
