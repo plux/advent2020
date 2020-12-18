@@ -1,22 +1,6 @@
 -module(aoc).
 
--export([int/1]).
--export([ints/1]).
--export([is_int/1]).
-
--export([float/1]).
--export([floats/1]).
--export([is_float/1]).
-
--export([words/1]).
--export([lines/1]).
--export([split/2]).
-
--export([solve/1]).
--export([solve/2]).
-
--export([grid/1]).
--export([enumerate/1]).
+-compile([export_all]).
 
 -type str() :: list().
 
@@ -71,6 +55,9 @@ grid(L) ->
 enumerate(L) ->
     lists:zip(lists:seq(0, length(L)-1), L).
 
+
+cartesian([H|T]) -> [[A|B] || A <- H, B <- cartesian(T)];
+cartesian([])    -> [[]].
 %% Solve ---------------------------------------------------------------
 solve(Mod) when is_atom(Mod) ->
     {ok, Input} = file:read_file("input/" ++ atom_to_list(Mod) ++ ".txt"),
